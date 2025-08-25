@@ -1,12 +1,32 @@
-FROM python:3.11-slim
 
+# Start with a base image that has git installed or install git manually
+FROM ubuntu:22.04
+
+# Declare build args to receive values from docker-compose
+ARG ENVIRONMENT
+ARG RUN_TYPE
+
+
+# Install curl, git, and Python 3 with pip
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    python3 \
+    python3-pip && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
 WORKDIR /app
 
-# Copy the entire project (including setup.py, your script, and modules)
-COPY . .
+ENV PYTHONPATH=/app
+ENV ENVIRONMENT=${ENVIRONMENT}
+ENV RUN_TYPE=${RUN_TYPE}
 
-# Install your package and its dependencies via setup.py
-RUN pip install --no-cache-dir .
+# Clone the git repository inside /app
+RUN git clone https://github.com/tushar5353/service.git
 
-# Command to run your Python script
-CMD ["python", "utils/kafka_utils/consumer.py", "--topic-name", "test-topic"]
+WORKDIR /app/service
+
+RUN pip3 install .
+
+CMD ["python3", "utils/kafka_utils/consumer.py", "--topic-name", "test-topic"]

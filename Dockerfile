@@ -1,6 +1,13 @@
 # Start with a base image that has git installed or install git manually
 FROM ubuntu:22.04
 
+# Declare build args to receive values from docker-compose
+ARG ENVIRONMENT
+ARG RUN_TYPE
+
+ENV ENVIRONMENT=${ENVIRONMENT}
+ENV RUN_TYPE=${RUN_TYPE}
+
 # Install curl, git, and Python 3 with pip
 RUN apt-get update && apt-get install -y \
     curl \
@@ -12,9 +19,16 @@ RUN apt-get update && apt-get install -y \
 # Set working directory
 WORKDIR /app
 
+ENV PYTHONPATH=/app
+
+RUN echo "ENVIRONMENT is $ENVIRONMENT"
+RUN echo "RUN_TYPE is $RUN_TYPE"
+
 # Clone the git repository inside /app
-RUN git clone https://github.com/tushar5353/service.git .
+RUN git clone https://github.com/tushar5353/service.git
 
-RUN cd service && pip3 install .
+WORKDIR /app/service
 
-RUN cd service && python api_gateway/run_server.py  service=service
+RUN pip3 install .
+
+RUN python3 api_gateway/run_server.py  --service=service

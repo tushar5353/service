@@ -3,7 +3,11 @@ version: '1.0.0'
 services:
   fastapi_service:
     build:
-      context: ./Dockerfile  # Path to Dockerfile for app1
+      context: ./  # Path to Dockerfile for app1
+      dockerfile: Dockerfile
+      args:
+        ENVIRONMENT: dev
+        RUN_TYPE: app
     ports:
       - "8080:8080"          # Map ports as needed
     depends_on:
@@ -12,7 +16,11 @@ services:
 
   consumer:
     build:
-      context: ./consumer_Dockerfile  # Path to Dockerfile for app2
+      context: ./
+      dockerfile: consumer_Dockerfile  # Path to Dockerfile for app2
+      args:
+        ENVIRONMENT: dev
+        RUN_TYPE: app
     depends_on:
       - mysql
       - kafka
@@ -58,6 +66,3 @@ services:
 
         # Create topics
         kafka-topics --create --topic test-topic --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
-
-volumes:
-  mysql-
