@@ -56,7 +56,7 @@ def start_consuming(consumer_config, topics):
 
                     event_type = event_data["event_type"]
 
-                    if event_type = "new_order":
+                    if event_type=="new_order":
                         orders.new(info["user_id"], info["product"], info["quantity"])
 
                     # Store the offset associated with msg to a local cache.

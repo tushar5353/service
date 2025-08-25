@@ -8,7 +8,7 @@ logger = logging.getLogger(os.environ["RUN_TYPE"])
 
 def add(user_name, email):
     engine = database.get_mysql_engine()
-    conn = engine.connection()
+    conn = engine.connect()
     query = f"INSERT INTO USERS(name, email) values ('{user_name}', '{email}')"
     logger.info(query)
     conn.execute(query)
