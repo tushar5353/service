@@ -1,6 +1,7 @@
+import os
 import logging
 
-from service.utils.config import config
+from service.utils.config import Config
 
 from sqlalchemy import create_engine, text
 
