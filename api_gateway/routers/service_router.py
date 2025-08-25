@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Body
 from service.api_gateway.routers import schemas
 from service.utils.kafka_utils.producer import AIOProducer
 from service.utils import config
+from service.lib import users
 
 # Initialize the logger
 logger = logging.getLogger(os.environ["RUN_TYPE"])

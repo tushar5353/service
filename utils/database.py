@@ -1,11 +1,15 @@
+import logging
+
 from service.utils.config import config
 
 from sqlalchemy import create_engine, text
 
-
 config_obj = Config()
 config = config_obj.get_config("environment")
 db_config = config["db"]
+
+# Initialize the logger
+logger = logging.getLogger(os.environ["RUN_TYPE"])
 
 def get_mysql_engine():
     mysql_config = db_config["mysql"]

@@ -9,6 +9,7 @@ from confluent_kafka import Consumer, KafkaException
 from service.utils import utils
 from service.utils.config import Config
 from service.utils.logs import configure_logging
+from service.lib import orders
 
 config_obj = Config()
 env_config = config_obj.get_config("environment")

@@ -11,7 +11,7 @@ class AddUser(BaseModel):
     api_key: str
     user_name: str
     email: str
-    api_key_validator: validate_api_keu(api_key)
+    api_key_validator: validate_api_key(api_key)
 
 class NewOrder(BaseModel):
     api_key: str

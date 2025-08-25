@@ -11,8 +11,6 @@ PYTHONPATH
 """
 
 import os
-import sys
-from pathlib import Path
 
 import uvicorn
 import argparse
@@ -30,13 +28,6 @@ if __name__ == "__main__":
 
     os.environ["SERVICE"] = args.service
     
-    # Add your module directory to sys.path
-    current_path = Path.cwd()
-    
-    module_path = str(current_path.parents[1])
-    if module_path not in sys.path:
-        sys.path.insert(0, module_path)
-
     from service.api_gateway.main import SETTINGS
 
     uvicorn.run("service.api_gateway.main:create_app", host=SETTINGS.server,
