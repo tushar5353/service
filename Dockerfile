@@ -1,9 +1,10 @@
 # Start with a base image that has git installed or install git manually
-FROM ubuntu:22.04
+FROM ubuntu:latest
 
 # Declare build args to receive values from docker-compose
 ARG ENVIRONMENT
 ARG RUN_TYPE
+ARG CACHEBUST=1
 
 ENV ENVIRONMENT=${ENVIRONMENT}
 ENV RUN_TYPE=${RUN_TYPE}
@@ -13,6 +14,7 @@ RUN apt-get update && apt-get install -y \
     curl \
     git \
     python3 \
+    python3.12-venv \
     python3-pip && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
@@ -21,14 +23,18 @@ WORKDIR /app
 
 ENV PYTHONPATH=/app
 
+RUN echo "Cache bust: $CACHEBUST"
 RUN echo "ENVIRONMENT is $ENVIRONMENT"
 RUN echo "RUN_TYPE is $RUN_TYPE"
 
 # Clone the git repository inside /app
-RUN git clone https://github.com/tushar5353/service.git
+RUN rm -rf /app/service && \
+    git clone https://github.com/tushar5353/service.git
 
 WORKDIR /app/service
 
-RUN pip3 install .
+RUN python3 -m venv venv
 
-RUN python3 api_gateway/run_server.py  --service=service
+RUN ./venv/bin/pip install .
+
+CMD ["./venv/bin/python", "api_gateway/run_server.py", "--service=service"]
