@@ -1,0 +1,63 @@
+version: '1.0.0'
+
+services:
+  fastapi_service:
+    build:
+      context: ./Dockerfile  # Path to Dockerfile for app1
+    ports:
+      - "8080:8080"          # Map ports as needed
+    depends_on:
+      - mysql
+      - kafka
+
+  consumer:
+    build:
+      context: ./consumer_Dockerfile  # Path to Dockerfile for app2
+    depends_on:
+      - mysql
+      - kafka
+
+  mysql:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: mydb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-/var/lib/mysql
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    command:
+      - sh
+      - -c
+      - |
+        # Start Kafka in the background
+        /etc/confluent/docker/run &
+
+        # Wait for Kafka to be ready
+        cub kafka-ready -b localhost:9092 1 20
+
+        # Create topics
+        kafka-topics --create --topic test-topic --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+
+volumes:
+  mysql-

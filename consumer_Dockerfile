@@ -1,0 +1,12 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Copy the entire project (including setup.py, your script, and modules)
+COPY . .
+
+# Install your package and its dependencies via setup.py
+RUN pip install --no-cache-dir .
+
+# Command to run your Python script
+CMD ["python", "utils/kafka_utils/consumer.py", "--topic-name", "test-topic"]
