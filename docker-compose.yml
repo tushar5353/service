@@ -11,10 +11,13 @@ services:
     ports:
       - "8080:8080"          # Map ports as needed
     depends_on:
-      - mysql
-      - kafka
+      mysql:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
 
   consumer:
+    restart: always
     build:
       context: ./
       dockerfile: consumer_Dockerfile  # Path to Dockerfile for app2
@@ -22,8 +25,10 @@ services:
         ENVIRONMENT: dev
         RUN_TYPE: app
     depends_on:
-      - mysql
-      - kafka
+      mysql:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
 
   mysql:
     image: mysql:8
@@ -36,8 +41,33 @@ services:
       - "3306:3306"
     volumes:
       - /tmp/data:/var/lib/mysql
-
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
   kafka:
-    image: apache/kafka:4.0.0
+    container_name: kafka
+    image: debezium/kafka:2.2.0.Final
     ports:
-      - "9092:9092"
+      - 19092:19092
+    restart: always
+    environment:
+      - CLUSTER_ID=5Yr1SIgYQz-b-dgRabWx4g
+      - NODE_ID=1
+      - KAFKA_CONTROLLER_QUORUM_VOTERS=1@kafka:9093
+      - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
+      - KAFKA_LISTENERS=CONTROLLER://0.0.0.0:9093,INSIDE://0.0.0.0:9092,OUTSIDE://0.0.0.0:19092
+      - KAFKA_ADVERTISED_LISTENERS=INSIDE://kafka:9092,OUTSIDE://localhost:19092
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      - KAFKA_INTER_BROKER_LISTENER_NAME=INSIDE
+      - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
+    healthcheck:
+      test: [ "CMD", "/kafka/bin/kafka-topics.sh", "--bootstrap-server=localhost:9092", "--list" ]
+      interval: 2s
+      timeout: 2s
+      retries: 10
+  #kafka:
+  #  image: apache/kafka:4.0.0
+  #  ports:
+  #    - "9092:9092"

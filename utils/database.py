@@ -3,7 +3,7 @@ import logging
 
 from service.utils.config import Config
 
-from sqlalchemy import create_engine, text
+import mysql.connector
 
 config_obj = Config()
 config = config_obj.get_config("environment")
@@ -12,17 +12,30 @@ db_config = config["db"]
 # Initialize the logger
 logger = logging.getLogger(os.environ["RUN_TYPE"])
 
-def get_mysql_engine():
+def get_mysql_conn():
     mysql_config = db_config["mysql"]
-    DATABASE_URL = f"mysql+mysqlconnector://{mysql_config['user']}:{mysql_config['password']}@{mysql_config['host']}:{mysql_config['port']}/{mysql_config['dbname']}"
+    conn = mysql.connector.connect(
+    user=mysql_config['user'],
+    password=mysql_config['password'],
+    host=mysql_config['host'],
+    database=mysql_config['dbname']
+    )
+    return conn
 
-    engine = create_engine(DATABASE_URL)
-    return engine
+def execute_statement(statement):
+    conn = get_mysql_conn()
+    cursor = conn.cursor()
+    cursor.execute(statement)
+    conn.commit()
 
 def make_migrations():
     migration_scripts = config_obj.get_config("db_migrations")
-    engine = get_mysql_engine()
-    conn = engine.connect()
     for table, statement in migration_scripts.items():
-        logging.info(f"Creating Table :: {table}")
-        conn.execute(text(statement))
+        logger.info(f"Creating Table :: {table}")
+        execute_statement(statement)
+
+def fetch_info(statement):
+    conn = get_mysql_conn()
+    cursor = conn.cursor()
+    cursor.execute(statement)
+    return cursor.fetchall()

@@ -3,10 +3,10 @@ import os
 import sys
 import json
 import logging
+import time
 
 from confluent_kafka import Consumer, KafkaException
 
-from service.utils import utils
 from service.utils.config import Config
 from service.utils.logs import configure_logging
 from service.lib import orders
@@ -64,8 +64,6 @@ def start_consuming(consumer_config, topics):
                     # Explicitly storing offsets after processing gives at-least once semantics.
                     logger.info(f"Commiting the offset for event")
                     consumer.store_offsets(msg)
-
-                    logger.info(f"SUCCESS:  Time Taken - {execution_time} seconds")
                 except Exception as e:
                     logger.error(f"Failed to process event. An exception occurred :: {e}", exc_info=True)
                     logger.info("commiting offset")
@@ -75,19 +73,16 @@ def start_consuming(consumer_config, topics):
         logger.info(f'Exception::{e}', exc_info=True)
 
     finally:
-        # Close down consumer to commit final offsets.
         consumer.close()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--topic-name", required=True) 
     args = parser.parse_args()
-    # Consumer configuration
-    # See https://github.com/edenhill/librdkafka/blob/master/CONFIGURATION.md
     conf = {'bootstrap.servers': env_config["kafka"]["kafka_brokers"],
-            'group.id': env_config[args.report_type]["kafka_config"]["group_id"],
-            'session.timeout.ms': env_config[args.report_type]["kafka_config"]["session_timeout"],
-            'auto.offset.reset': env_config[args.report_type]["kafka_config"]["auto_offset_reset"],
-            'enable.auto.offset.store': env_config[args.report_type]["kafka_config"]["enable_auto_offset_store"],
-            'max.poll.interval.ms': env_config[args.report_type]["kafka_config"]["max_poll"]}
-    start_consuming(conf, env_config[args.report_type]["kafka_config"]["topics"])
+            'group.id': env_config["kafka"]["topics"][args.topic_name]["group_id"],
+            'session.timeout.ms': env_config["kafka"]["topics"][args.topic_name]["session_timeout"],
+            'auto.offset.reset': env_config["kafka"]["topics"][args.topic_name]["auto_offset_reset"],
+            'enable.auto.offset.store': env_config["kafka"]["topics"][args.topic_name]["enable_auto_offset_store"],
+            'max.poll.interval.ms': env_config["kafka"]["topics"][args.topic_name]["max_poll"]}
+    start_consuming(conf, env_config["kafka"]["topics"][args.topic_name]["name"])

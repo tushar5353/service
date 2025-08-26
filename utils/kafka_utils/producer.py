@@ -4,6 +4,7 @@ import logging
 
 import asyncio
 import confluent_kafka
+from confluent_kafka.admin import AdminClient, NewTopic
 from confluent_kafka import KafkaException
 from fastapi import FastAPI, HTTPException
 from threading import Thread
@@ -17,6 +18,28 @@ config = config_obj.get_config("environment")
 kafka_config = {
     "bootstrap.servers": config["kafka"]["kafka_brokers"]    
         }
+topic_info = config["kafka"]["topics"]
+
+def create_topics():
+    admin_client = AdminClient(kafka_config)
+    print("Creating Kafka Topics")
+    for key, value in topic_info.keys():
+        new_topic = NewTopic(topic=value["name"][0],
+                             num_partitions=value["partitions"],
+                             replication_factor=value["replication_factor"])
+
+        # Create topic if it does not exist
+        futures = admin_client.create_topics([new_topic])
+        
+        for topic, f in futures.items():
+            try:
+                f.result()  # The result itself is None
+                print(f"Topic {value['name']} created")
+            except Exception as e:
+                if "TopicAlreadyExistsError" in str(e):
+                    print(f"Topic {value['name']} already exists")
+                else:
+                    print(f"Failed to create topic {value['name']}: {e}")
 
 class AIOProducer:
     def __init__(self, loop=None):
@@ -70,6 +93,3 @@ class AIOProducer:
                     on_delivery, err, msg)
         self._producer.produce(topic, value, on_delivery=ack)
         return result
-
-
-

@@ -7,9 +7,13 @@ from service.utils import database
 logger = logging.getLogger(os.environ["RUN_TYPE"])
 
 def add(user_name, email):
-    engine = database.get_mysql_engine()
-    conn = engine.connect()
+    """
+    Function to add a new user
+
+    :param user_name: `str` - Name of user
+    :param email: `str` - email for a user
+    """
     query = f"INSERT INTO USERS(name, email) values ('{user_name}', '{email}')"
     logger.info(query)
-    conn.execute(query)
+    database.execute_statement(query)
 

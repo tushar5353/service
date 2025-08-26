@@ -39,7 +39,7 @@ def create_app():
         try:
             configure_logging()
             logger.info("startup")
-            engine = database.make_migrations()
+            database.make_migrations()
         except Exception as e:
             logging.info(e, exc_info=True)
 

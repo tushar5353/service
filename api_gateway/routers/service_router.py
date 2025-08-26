@@ -21,7 +21,6 @@ env_config = config_obj.get_config("environment")
 service_router = APIRouter(prefix="/service",
                              tags=["service"],)
 
-aio_producer = AIOProducer()
 cnt = 0
 
 def ack(err, msg):
@@ -47,13 +46,20 @@ async def add_user(request: schemas.AddUser):
         raise HTTPException(status_code=400, detail=str(e))
 
 @service_router.post("/order")
-async def add_user(request: schemas.NewOrder):
+async def add_order(request: schemas.NewOrder):
     try:
-        api_producer.produce("test-topic",
-                             {"user_id": request.user_id,
-                              "product": request.product,
-                              "quantity": request.quantity})
+        aio_producer = AIOProducer()
+        aio_producer.produce_with_delivery_notification(
+                             "test-topic",
+                             {"event_type": "new_order",
+                              "context":
+                                 {"user_id": request.user_id,
+                                  "product": request.product,
+                                  "quantity": request.quantity}
+                             }, ack)
+        aio_producer.close()
         return {"status":"success"}
     except Exception as e:
         logger.error(f"Error::{e}", exc_info=True)
+        aio_producer.close()
         raise HTTPException(status_code=400, detail=str(e))
