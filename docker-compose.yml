@@ -3,13 +3,13 @@ version: '1.0.0'
 services:
   fastapi_service:
     build:
-      context: ./  # Path to Dockerfile for app1
+      context: ./
       dockerfile: Dockerfile
       args:
         ENVIRONMENT: dev
         RUN_TYPE: app
     ports:
-      - "8080:8080"          # Map ports as needed
+      - "8080:8080"
     depends_on:
       mysql:
         condition: service_healthy
@@ -20,7 +20,7 @@ services:
     restart: always
     build:
       context: ./
-      dockerfile: consumer_Dockerfile  # Path to Dockerfile for app2
+      dockerfile: consumer_Dockerfile
       args:
         ENVIRONMENT: dev
         RUN_TYPE: app
